@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import controls from '../../constants/controls';
 import createElement from '../helpers/domHelper';
 
@@ -28,6 +27,7 @@ export async function fight(firstFighter, secondFighter) {
         let lastCrit1 = 0;
         let lastCrit2 = 0;
         const pressedKeys = new Set();
+        const controller = new AbortController();
 
         const leftHealthBar = document.getElementById('left-fighter-indicator');
         const rightHealthBar = document.getElementById('right-fighter-indicator');
@@ -50,14 +50,30 @@ export async function fight(firstFighter, secondFighter) {
         });
         document.getElementById('root').append(combatLog);
 
-        const logEvent = message => {
+        function logEvent(message) {
             const logEntry = createElement({ tagName: 'div' });
             logEntry.innerText = message;
             combatLog.prepend(logEntry);
-        };
+        }
+
+        function updateCritIndicator(position, lastCrit) {
+            const indicatorElement = document.querySelector(`.crit-indicator-${position}`);
+            const cooldown = 10000;
+            const now = Date.now();
+            const remaining = Math.ceil((cooldown - (now - lastCrit)) / 1000);
+
+            if (remaining > 0) {
+                indicatorElement.style.color = '#e74c3c';
+                indicatorElement.innerText = `CRIT: ${remaining}s`;
+                setTimeout(() => updateCritIndicator(position, lastCrit), 1000);
+            } else {
+                indicatorElement.style.color = '#2ecc71';
+                indicatorElement.innerText = 'CRIT READY';
+            }
+        }
 
         // Crit Indicators setup
-        const createCritIndicator = position => {
+        function createCritIndicator(position) {
             const indicator = createElement({ tagName: 'div', className: `crit-indicator-${position}` });
             indicator.style.color = '#2ecc71';
             indicator.style.fontWeight = 'bold';
@@ -66,27 +82,12 @@ export async function fight(firstFighter, secondFighter) {
             const targetParent = position === 'left' ? indicators[0] : indicators[1];
             targetParent.append(indicator);
             return indicator;
-        };
+        }
 
-        const critIndicator1 = createCritIndicator('left');
-        const critIndicator2 = createCritIndicator('right');
+        createCritIndicator('left');
+        createCritIndicator('right');
 
-        const updateCritIndicator = (indicator, lastCrit) => {
-            const cooldown = 10000;
-            const now = Date.now();
-            const remaining = Math.ceil((cooldown - (now - lastCrit)) / 1000);
-
-            if (remaining > 0) {
-                indicator.style.color = '#e74c3c';
-                indicator.innerText = `CRIT: ${remaining}s`;
-                setTimeout(() => updateCritIndicator(indicator, lastCrit), 1000);
-            } else {
-                indicator.style.color = '#2ecc71';
-                indicator.innerText = 'CRIT READY';
-            }
-        };
-
-        const updateHealth = (fighterNum, health) => {
+        function updateHealth(fighterNum, health) {
             const maxHealth = fighterNum === 1 ? firstFighter.health : secondFighter.health;
             const percentage = Math.max(0, (health / maxHealth) * 100);
             const bar = fighterNum === 1 ? leftHealthBar : rightHealthBar;
@@ -101,20 +102,17 @@ export async function fight(firstFighter, secondFighter) {
             } else {
                 bar.style.backgroundColor = '#e74c3c';
             }
-        };
+        }
 
         updateHealth(1, firstFighter.health);
         updateHealth(2, secondFighter.health);
 
-        const cleanup = () => {
-            // eslint-disable-next-line no-use-before-define
-            window.removeEventListener('keydown', handleKeyDown);
-            // eslint-disable-next-line no-use-before-define
-            window.removeEventListener('keyup', handleKeyUp);
+        function cleanup() {
+            controller.abort();
             combatLog.remove();
-        };
+        }
 
-        const checkWinner = () => {
+        function checkWinner() {
             if (health1 <= 0) {
                 cleanup();
                 resolve(secondFighter);
@@ -122,9 +120,9 @@ export async function fight(firstFighter, secondFighter) {
                 cleanup();
                 resolve(firstFighter);
             }
-        };
+        }
 
-        const handleKeyDown = event => {
+        function handleKeyDown(event) {
             if (event.repeat) return;
             pressedKeys.add(event.code);
 
@@ -161,7 +159,7 @@ export async function fight(firstFighter, secondFighter) {
                     lastCrit1 = now;
                     logEvent(`CRITICAL HIT! ${firstFighter.name} deals ${damage} unblockable damage!`);
                     updateHealth(2, health2);
-                    updateCritIndicator(critIndicator1, lastCrit1);
+                    updateCritIndicator('left', lastCrit1);
                 }
             }
 
@@ -174,18 +172,18 @@ export async function fight(firstFighter, secondFighter) {
                     lastCrit2 = now;
                     logEvent(`CRITICAL HIT! ${secondFighter.name} deals ${damage} unblockable damage!`);
                     updateHealth(1, health1);
-                    updateCritIndicator(critIndicator2, lastCrit2);
+                    updateCritIndicator('right', lastCrit2);
                 }
             }
 
             checkWinner();
-        };
+        }
 
-        const handleKeyUp = event => {
+        function handleKeyUp(event) {
             pressedKeys.delete(event.code);
-        };
+        }
 
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('keydown', handleKeyDown, { signal: controller.signal });
+        window.addEventListener('keyup', handleKeyUp, { signal: controller.signal });
     });
 }
