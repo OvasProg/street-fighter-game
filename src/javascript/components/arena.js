@@ -1,5 +1,6 @@
 import createElement from '../helpers/domHelper';
 import { createFighterImage } from './fighterPreview';
+import { fight } from './fight';
 
 function createFighter(fighter, position) {
     const imgElement = createFighterImage(fighter);
@@ -66,7 +67,6 @@ export default function renderArena(selectedFighters) {
     root.innerHTML = '';
     root.append(arena);
 
-    // todo:
-    // - start the fight
-    // - when fight is finished show winner
+    // eslint-disable-next-line no-unused-vars
+    fight(...selectedFighters).then(winner => {});
 }
