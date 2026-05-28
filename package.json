@@ -23,11 +23,14 @@
         "url": "git+https://github.com/BinaryStudioAcademy/lecture-starter-js.git"
     },
     "devDependencies": {
+        "@babel/preset-env": "^7.29.7",
         "commitlint": "^17.6.5",
         "eslint": "^8.42.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-prettier": "^4.2.1",
+        "jest": "^30.4.2",
+        "jest-environment-jsdom": "^30.4.1",
         "lint-staged": "^13.2.2",
         "prettier": "^2.8.8",
         "simple-git-hooks": "^2.13.0",
