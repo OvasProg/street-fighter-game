@@ -1,5 +1,6 @@
 {
     "name": "street-fighter",
+    "homepage": "https://ovasprog.github.io/street-fighter-game",
     "engines": {
         "node": ">=22",
         "npm": ">=10"
@@ -14,7 +15,9 @@
         "build": "vite build",
         "preview": "vite preview",
         "lint": "eslint --ext .js .",
-        "lint:fix": "npm run lint -- --fix"
+        "lint:fix": "npm run lint -- --fix",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d dist --remote github"
     },
     "author": "Binary Studio developers",
     "license": "ISC",
@@ -29,6 +32,7 @@
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-prettier": "^4.2.1",
+        "gh-pages": "^6.3.0",
         "jest": "^30.4.2",
         "jest-environment-jsdom": "^30.4.1",
         "lint-staged": "^13.2.2",
